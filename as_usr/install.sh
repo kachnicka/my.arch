@@ -27,6 +27,7 @@ else
     git pull
     popd
 fi
+sudo pacman --needed --noconfirm -S zsh-syntax-highlighting zsh-history-substring-search
 
 # config management
 sudo pacman --needed --noconfirm -S stow
@@ -39,7 +40,24 @@ if [ ! -x /bin/yay ]; then
     PACMAN="pacman --needed --noconfirm" makepkg -si
     popd
 fi
-sudo pacman --needed --noconfirm -S curl thunderbird
-yay --needed --noconfirm -Sy brave-bin
+sudo pacman --needed --noconfirm -S htop curl thunderbird vlc vlc-plugins-all
+sudo pacman --needed --noconfirm -S flameshot grim slurp wl-clipboard wl-clip-persist
+yay --needed --noconfirm -S brave-bin
 
-sudo pacman --needed --noconfirm -S zsh-syntax-highlighting zsh-history-substring-search
+# audio
+sudo pacman --needed --noconfirm -S pipewire wireplumber playerctl
+sudo pacman --needed --noconfirm -S pipewire-pulse pipewire-alsa pipewire-audio
+sudo pacman --needed --noconfirm -S pavucontrol
+systemctl --user enable pipewire pipewire-pulse wireplumber
+# sudo pacman --needed --noconfirm -S pipewire-jack
+# sudo pacman --needed --noconfirm -S libcamera
+# as_root:
+# sudo pacman --needed --noconfirm -S bluez bluez-utils pipewire-bluez5
+# sudo systemctl enable bluetooth
+
+# hyprland
+sudo pacman --needed --noconfirm -S hyprpaper hypridle waybar libnotify dunst
+sudo pacman --needed --noconfirm -S qt5-wayland qt6-wayland adw-gtk-theme
+sudo pacman --needed --noconfirm -S gammastep brightnessctl ddcutil
+sudo pacman --needed --noconfirm -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
+yay --needed --noconfirm -S tofi

@@ -1,0 +1,163 @@
+{
+  "layer": "top",
+  "position": "top",
+  "margin-top": -2,
+  "margin-bottom": -3,
+  "spacing" : 0,
+
+  "modules-left": [
+  "hyprland/workspaces",
+  ],
+
+  "modules-center": ["clock"],
+
+  "modules-right": [
+    "tray",
+    "cpu",
+    "memory",
+    "hyprland/language",
+    "bluetooth",
+    "network",
+    "backlight",
+    "battery",
+    "wireplumber", 
+  ],
+
+  "hyprland/workspaces": {
+    "format": "{name}: {icon}",
+    "format-icons": {
+      "active.bak": "",
+      "default.bak": "",
+      "active": "",
+      "default": "",
+    }
+  },
+
+  "bluetooth": {
+    "format": "󰂲",
+    "format-on": "{icon}",
+    "format-off": "{icon}", 
+    "format-connected":"{icon}",
+    "format-icons":{
+        "on":"󰂯",
+        "off": "󰂲",
+        "connected": "󰂱",
+        },
+    "on-click": "blueman-manager",
+    "tooltip-format-connected":"{device_enumerate}"
+  },
+
+  "custom/music": {
+    "format": "  {}",
+    "escape": true,
+    "interval": 5,
+    "tooltip": false,
+    "exec": "playerctl metadata --format='{{ artist }} - {{ title }}'",
+    "on-click": "playerctl play-pause",
+    "max-length": 50
+  },
+
+  "clock": {
+    "format": "{:%d.%m.%Y | %H:%M}",
+    "interval": 15,
+    "tooltip-format.bak": "<tt><small>{calendar}</small></tt>",
+    "tooltip-format": "<tt>{calendar}</tt>",
+    "calendar": {
+      "mode"          : "year",
+      "mode-mon-col"  : 3,
+      "weeks-pos"     : "right",
+      "on-scroll"     : 1,
+      "format": {
+        "months":     "<span color='#ffead3'><b>{}</b></span>",
+        "days":       "<span color='#ecc6d9'><b>{}</b></span>",
+        "weeks":      "<span color='#99ffdd'><b>W{}</b></span>",
+        "weekdays":   "<span color='#ffcc66'><b>{}</b></span>",
+        "today":      "<span color='#ff6699'><b><u>{}</u></b></span>"
+      }
+      },
+      "actions":  {
+        "on-click-right": "mode",
+        "on-click": "shift_reset",
+        "on-scroll-up": "shift_up",
+        "on-scroll-down": "shift_down"
+      },
+  },
+
+  "network": {
+    "format-wifi": "󰤢",
+    "format-ethernet": "󰈀 ",
+    "format-disconnected": "󰤠 ",
+    "interval": 5,
+    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
+    "tooltip-format-ethernet": "{ifname} ",
+    "tooltip-format-disconnected": "Disconnected",
+    "on-click": "nm-connection-editor"
+
+ },
+
+  "cpu": {
+    "interval": 1,
+    "format": " {usage:>2}%",
+    "format.bak": " {icon0}{icon1}{icon2}{icon3}{usage:>2}%",
+    "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
+    "on-click": "alacritty -e htop"
+  },
+
+  "memory": {
+    "interval": 1,
+    "format": " {percentage:>2}%",
+    "tooltip-format": "{percentage:>2}% ({used:0.1f}GB/{total:0.1f}GB)",
+  },
+
+  "backlight": {
+        "format": "{icon}  {percent}%",
+        "format-icons": ["","󰃜", "󰃛", "󰃞","󰃝","󰃟","󰃠"],
+        "tooltip": false
+  },
+  
+  "wireplumber": {
+    "format": "{icon}{volume:>2}%",
+    "format-muted": "   0%",
+    "format-icons": {
+      "default": [" ", " "],
+      "default.bak": [" ", " ", " "],
+    },
+    "on-click": "pavucontrol",
+    "scroll-step": 5,
+  },
+
+  "hyprland/language": {
+    "format": "  {short}",
+  },
+
+  "battery": {
+        "interval":2,
+        "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon}  {capacity}%",
+        "format-full": "{icon}  {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-alt": "{icon} {time}",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": ["", "", "", "", ""]
+  },
+  
+  "custom/lock": {
+  "tooltip": false,
+  "on-click": "sh -c '(sleep 0s; hyprlock)' & disown",
+  "format" : ""
+  },
+
+  "tray": {
+    "icon-size": 18,
+    "spacing": 16
+  },
+
+}
+

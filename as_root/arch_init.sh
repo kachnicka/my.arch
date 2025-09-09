@@ -117,6 +117,10 @@ else
     echo " there is nothing to do"
 fi
 
+echo -e "\nAdd: Audio stack"
+pacman --needed --noconfirm -S rtkit
+systemctl enable rtkit-daemon.service
+
 echo -e "\nAdd: Hyprland"
 # TODO: uwsm for user now, maybe greetd+tuigreet later?
 pacman --needed --noconfirm -S hyprland uwsm xdg-user-dirs
