@@ -117,6 +117,17 @@ else
     echo " there is nothing to do"
 fi
 
+echo -e "\nAdd: NTP clock sync"
+if timedatectl show | grep -q "NTPSynchronized=no"; then
+    timedatectl set-ntp true
+    if [ ! $? -eq 0 ]; then
+        echo " Failed to enable NTP sync."
+        exit 1
+    fi
+else
+    echo " NTP sync is enabled."
+fi
+
 echo -e "\nAdd: Audio stack"
 pacman --needed --noconfirm -S rtkit
 systemctl enable rtkit-daemon.service

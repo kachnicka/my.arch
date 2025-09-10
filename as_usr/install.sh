@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # dev tools
-sudo pacman --needed --noconfirm -S base-devel vulkan-devel llvm cmake ninja git python github-cli
+sudo pacman --needed --noconfirm -S base-devel vulkan-devel llvm clang libc++ cmake ninja mold git python github-cli
 
 # dev env
 sudo pacman --needed --noconfirm -S alacritty tmux neovim npm ripgrep unzip
