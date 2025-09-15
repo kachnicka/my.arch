@@ -13,7 +13,7 @@ progress_bar_corners = top-left,bottom-right
 offset = (15, 25)
 gap_size = 5
 format = "<b>󰁕 %a</b>\n%s\n<i>%b</i>"
-font = JetBrains Mono 12
+font = JetBrainsMono Nerd Font 12
 min_icon_size = 64
 max_icon_size = 0
 

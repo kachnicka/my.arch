@@ -6,7 +6,7 @@ program = '/bin/zsh'
 size = 12
 
 [font.normal]
-family = 'JetBrains Mono'
+family = 'JetBrainsMono Nerd Font'
 style = 'Regular'
 
 # Colors (Gruvbox Material Dark Medium)
