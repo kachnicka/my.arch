@@ -2,6 +2,7 @@
 
 # dev tools
 sudo pacman --needed --noconfirm -S base-devel vulkan-devel llvm clang libc++ cmake ninja mold git python github-cli
+sudo pacman --needed --noconfirm -S renderdoc valgrind
 
 # dev env
 sudo pacman --needed --noconfirm -S alacritty tmux neovim npm ripgrep unzip
@@ -61,3 +62,7 @@ sudo pacman --needed --noconfirm -S qt5-wayland qt6-wayland adw-gtk-theme
 sudo pacman --needed --noconfirm -S gammastep brightnessctl ddcutil
 sudo pacman --needed --noconfirm -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 yay --needed --noconfirm -S tofi
+
+# apps
+sudo pacman --needed --noconfirm -S imv gimp
+# yay --needed --noconfirm -S tev
