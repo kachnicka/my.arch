@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # dev tools
-sudo pacman --needed --noconfirm -S base-devel vulkan-devel llvm clang libc++ cmake ninja mold git python github-cli
+sudo pacman --needed --noconfirm -S base-devel vulkan-devel llvm clang libc++ lld cmake ninja mold git python github-cli
 sudo pacman --needed --noconfirm -S renderdoc valgrind
 
 # dev env
@@ -41,7 +41,7 @@ if [ ! -x /bin/yay ]; then
     PACMAN="pacman --needed --noconfirm" makepkg -si
     popd
 fi
-sudo pacman --needed --noconfirm -S htop curl thunderbird vlc vlc-plugins-all
+sudo pacman --needed --noconfirm -S htop curl thunderbird vlc vlc-plugins-all udiskie
 sudo pacman --needed --noconfirm -S flameshot grim slurp wl-clipboard wl-clip-persist
 yay --needed --noconfirm -S brave-bin
 
