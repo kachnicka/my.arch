@@ -148,7 +148,7 @@ return {
           '--clang-tidy',
           '--header-insertion=never',
           '--completion-style=detailed',
-          '--function-arg-placeholders',
+          '--function-arg-placeholders=true',
           '--fallback-style=llvm',
           '--experimental-modules-support',
         },
@@ -187,13 +187,14 @@ return {
     vim.list_extend(ensure_installed, { 'stylua' })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+    vim.lsp.set_log_level 'off'
     -- Setup LSP servers using Neovim 0.11 APIs
     for server_name, server_config in pairs(servers) do
       local config = vim.tbl_deep_extend('force', { capabilities = capabilities }, server_config)
       config.root_markers = server_config.root_dir and { server_config.root_dir(vim.fn.expand '%:p') } or nil
       config.enable = function(client, bufnr)
         if server_name == 'clangd' then
-          return vim.fn.filereadable(vim.fn.getcwd() .. '/compile_commands.json') == 1
+          return vim.fn.filereadable(vim.fn.getcwd() .. 'compile_commands.json') == 1
         end
         return true
       end
