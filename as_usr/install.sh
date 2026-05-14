@@ -1,12 +1,15 @@
-#!/bin/sh
+#!/bin/bash
+
+PACMAN="sudo pacman --needed --noconfirm"
 
 # dev tools
-sudo pacman --needed --noconfirm -S base-devel vulkan-devel llvm clang libc++ lld cmake ninja mold git python github-cli
-sudo pacman --needed --noconfirm -S renderdoc valgrind
+$PACMAN -S base-devel vulkan-devel llvm clang libc++ lld cmake ninja mold git python github-cli
+$PACMAN -S renderdoc valgrind
 
 # dev env
-sudo pacman --needed --noconfirm -S alacritty tmux neovim npm ripgrep unzip
-sudo pacman --needed --noconfirm -S ttf-jetbrains-mono ttf-jetbrains-mono-nerd
+$PACMAN -S alacritty tmux neovim npm ripgrep unzip
+$PACMAN -S noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu
+$PACMAN -S ttf-jetbrains-mono ttf-jetbrains-mono-nerd
 
 TMUX_TPM_CONFIG_PATH=~/.config/tmux/plugins/tpm
 if [ ! -d "$TMUX_TPM_CONFIG_PATH" ]; then
@@ -28,41 +31,41 @@ else
     git pull
     popd
 fi
-sudo pacman --needed --noconfirm -S zsh-syntax-highlighting zsh-history-substring-search
+$PACMAN -S zsh-syntax-highlighting zsh-history-substring-search
 
 # config management
-sudo pacman --needed --noconfirm -S stow
+$PACMAN -S stow
 
 # apps
-if [ ! -x /bin/yay ]; then
-    mkdir -p /tmp/yay
-    git clone https://aur.archlinux.org/yay-bin.git /tmp/yay
-    pushd /tmp/yay
-    PACMAN="pacman --needed --noconfirm" makepkg -si
-    popd
-fi
-sudo pacman --needed --noconfirm -S htop curl thunderbird vlc vlc-plugins-all udiskie
-sudo pacman --needed --noconfirm -S flameshot grim slurp wl-clipboard wl-clip-persist
+# always rebuilds yay to catch updates since aur-bin packages are fast
+rm -rf /tmp/yay
+git clone https://aur.archlinux.org/yay-bin.git /tmp/yay
+pushd /tmp/yay
+# PACMAN="pacman --needed --noconfirm" makepkg -si
+makepkg -si --noconfirm
+popd
+$PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie
+$PACMAN -S flameshot grim slurp wl-clipboard wl-clip-persist
 yay --needed --noconfirm -S brave-bin
 
 # audio
-sudo pacman --needed --noconfirm -S pipewire wireplumber playerctl
-sudo pacman --needed --noconfirm -S pipewire-pulse pipewire-alsa pipewire-audio
-sudo pacman --needed --noconfirm -S pavucontrol
+$PACMAN -S pipewire wireplumber playerctl
+$PACMAN -S pipewire-pulse pipewire-alsa pipewire-audio
+$PACMAN -S pavucontrol
 systemctl --user enable pipewire pipewire-pulse wireplumber
-# sudo pacman --needed --noconfirm -S pipewire-jack
-# sudo pacman --needed --noconfirm -S libcamera
+# $PACMAN -S pipewire-jack
+# $PACMAN -S libcamera
 # as_root:
-# sudo pacman --needed --noconfirm -S bluez bluez-utils pipewire-bluez5
+# $PACMAN -S bluez bluez-utils pipewire-bluez5
 # sudo systemctl enable bluetooth
 
 # hyprland
-sudo pacman --needed --noconfirm -S hyprpaper hypridle waybar libnotify dunst
-sudo pacman --needed --noconfirm -S qt5-wayland qt6-wayland adw-gtk-theme
-sudo pacman --needed --noconfirm -S gammastep brightnessctl ddcutil
-sudo pacman --needed --noconfirm -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
+$PACMAN -S hyprpaper hypridle waybar libnotify dunst
+$PACMAN -S qt5-wayland qt6-wayland adw-gtk-theme
+$PACMAN -S gammastep brightnessctl ddcutil
+$PACMAN -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 yay --needed --noconfirm -S tofi
 
 # apps
-sudo pacman --needed --noconfirm -S imv gimp
+$PACMAN -S imv gimp
 # yay --needed --noconfirm -S tev

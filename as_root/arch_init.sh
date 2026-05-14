@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # arch install:
 #     NetworkManager
 #     GRUB
+
+PACMAN="pacman --needed --noconfirm"
 
 # expected to run as root right after installation
 if [ "$(id -u)" -ne 0 ]; then
@@ -23,11 +25,17 @@ if [ "$ADD_MULTILIB" -eq 0 ]; then
 else
     echo " there is nothing to do"
 fi
-pacman --needed --noconfirm -Syu
-pacman --needed --noconfirm -S man-db man-pages
+$PACMAN -Syu
+$PACMAN -S man-db man-pages
+
+echo -e "\nEnable: NetworkManager"
+systemctl enable NetworkManager
+
+echo -e "\nEnable: fstrim.timer"
+systemctl enable fstrim.timer
 
 echo -e "\nEdit: /etc/sudoer"
-pacman --needed --noconfirm -S sudo
+$PACMAN -S sudo
 SUDO_FILE="/etc/sudoers"
 SUDO_TEMP="/tmp/sudoers.tmp"
 SUDO_BAK="/etc/sudoers.bak.$(date +%Y%m%d%H%M%S)"
@@ -78,7 +86,7 @@ if [ ! -r "$FAILLOCK_FILE" ]; then
 fi
 MODIFY_DENY=$(grep -c "^deny = .*$" "$FAILLOCK_FILE")
 if [ "$MODIFY_DENY" -eq 0 ]; then
-    " adding deny = 5"
+    echo " adding deny = 5"
     sed -i '/^# deny = 3$/ s/# deny = 3/deny = 5/' "$FAILLOCK_FILE"
 else
     echo " there is nothing to do"
@@ -86,9 +94,13 @@ fi
 
 #
 
-USERNAME="kachnicka"
+USERNAME="$1"
+if [ -z "$USERNAME" ]; then
+    echo " Error: username argument is required" >&2
+    exit 1
+fi
 echo -e "\nAdd: user '$USERNAME'"
-pacman --needed --noconfirm -S zsh 
+$PACMAN -S zsh 
 if id "$USERNAME" &>/dev/null; then
     echo " there is nothing to do"
 else
@@ -97,21 +109,29 @@ else
     echo " added '$USERNAME'"
 fi
 
+echo -e "\nAdd: CPU microcode"
+if grep -qi "GenuineIntel" /proc/cpuinfo; then
+    echo " detected: Intel"
+    $PACMAN -S intel-ucode
+elif grep -qi "AuthenticAMD" /proc/cpuinfo; then
+    echo " detected: AMD"
+    $PACMAN -S amd-ucode
+fi
+mkinitcpio -P
+
 echo -e "\nAdd: GPU driver"
 GPU_INFO=$(lspci | grep -E "VGA|3D")
 if echo "$GPU_INFO" | grep -Eqi "AMD|Advanced Micro Devices"; then
     echo " detected: AMD"
-    pacman --needed --noconfirm -S mesa lib32-mesa vulkan-radeon
+    $PACMAN -S mesa lib32-mesa vulkan-radeon
 elif echo "$GPU_INFO" | grep -qi "NVIDIA"; then
     echo " detected: NVIDIA"
-    echo " NOT IMPLEMENTED/TESTED"
-    # pacman --needed --noconfirm -S nvidia nvidia-utils
-    exit 1
+    # nvidia-open requires Turing (RTX 2000) or newer; use nvidia (proprietary) for older cards
+    $PACMAN -S nvidia-open nvidia-utils lib32-nvidia-utils nvidia-settings
 elif echo "$GPU_INFO" | grep -qi "Intel"; then
     echo " detected: Intel"
-    echo " NOT IMPLEMENTED/TESTED"
-    # pacman --needed --noconfirm -S mesa
-    exit 1
+    # intel-media-driver for Broadwell+; use libva-intel-driver for pre-Haswell
+    $PACMAN -S mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver
 else
     echo " detected: nothing"
     echo " there is nothing to do"
@@ -119,8 +139,7 @@ fi
 
 echo -e "\nAdd: NTP clock sync"
 if timedatectl show | grep -q "NTPSynchronized=no"; then
-    timedatectl set-ntp true
-    if [ ! $? -eq 0 ]; then
+    if ! timedatectl set-ntp true; then
         echo " Failed to enable NTP sync."
         exit 1
     fi
@@ -129,12 +148,12 @@ else
 fi
 
 echo -e "\nAdd: Audio stack"
-pacman --needed --noconfirm -S rtkit
+$PACMAN -S rtkit
 systemctl enable rtkit-daemon.service
 
 echo -e "\nAdd: Hyprland"
 # TODO: uwsm for user now, maybe greetd+tuigreet later?
-pacman --needed --noconfirm -S hyprland uwsm xdg-user-dirs
+$PACMAN -S hyprland uwsm xdg-user-dirs
 PROFILE_FILE="/home/$USERNAME/.zprofile"
 if [ ! -f "$PROFILE_FILE" ]; then
     echo " adding $PROFILE_FILE"
@@ -152,7 +171,7 @@ else
 fi
 
 echo -e "\nAdd: Basic fonts"
-pacman --needed --noconfirm -S ttf-opensans 
+$PACMAN -S ttf-opensans 
 fc-cache
 
 echo -e "\nReboot system? (y/N)"

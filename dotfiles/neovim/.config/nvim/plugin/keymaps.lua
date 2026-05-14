@@ -14,3 +14,12 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 vim.keymap.set('c', '<C-e>', '<C-p>', { desc = 'Select previous' })
+
+-- Helper function for the "Toggle and Move Down" logic
+local function toggle_and_move()
+  return 'gccj0'
+end
+vim.keymap.set('n', '<C-/>', toggle_and_move, { expr = true, remap = true, desc = 'Comment Line and Go to Next' })
+vim.keymap.set('n', '<C-_>', toggle_and_move, { expr = true, remap = true, desc = 'Comment Line and Go to Next' })
+vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Comment Visual' })
+vim.keymap.set('x', '<C-_>', 'gc', { remap = true, desc = 'Comment Visual' })
