@@ -84,6 +84,7 @@
 #backlight,
 #network,
 #custom-lock,
+#custom-screenshot,
 #battery {
   background-color: #1a1b26;
   padding: 0.2rem 0.7rem;
@@ -104,10 +105,12 @@
 #backlight:hover,
 #network:hover,
 #custom-lock:hover,
+#custom-screenshot:hover,
 #battery:hover {
   background-color: rgb(41, 42, 53);
 }
 
+#custom-screenshot,
 #tray,
 #cpu,
 #language,
@@ -161,6 +164,10 @@
 
 #custom-lock {
   color: #babbf1;
+}
+
+#custom-screenshot {
+  padding-right: 1.1rem;
 }
 #bluetooth {
   color: #888888;

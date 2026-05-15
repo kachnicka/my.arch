@@ -41,11 +41,10 @@ $PACMAN -S stow
 rm -rf /tmp/yay
 git clone https://aur.archlinux.org/yay-bin.git /tmp/yay
 pushd /tmp/yay
-# PACMAN="pacman --needed --noconfirm" makepkg -si
-makepkg -si --noconfirm
+PACMAN="sudo pacman" makepkg -si --needed --noconfirm
 popd
 $PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie
-$PACMAN -S flameshot grim slurp wl-clipboard wl-clip-persist
+$PACMAN -S grim slurp satty wl-clipboard wl-clip-persist
 yay --needed --noconfirm -S brave-bin
 
 # audio

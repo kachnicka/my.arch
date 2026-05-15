@@ -13,6 +13,7 @@
 
   "modules-right": [
     "tray",
+    "custom/screenshot",
     "cpu",
     "memory",
     "hyprland/language",
@@ -148,6 +149,12 @@
         "format-icons": ["", "", "", "", ""]
   },
   
+  "custom/screenshot": {
+    "format": "",
+    "on-click": "grim -g \"$(slurp)\" - | satty -f -",
+    "tooltip": false
+  },
+
   "custom/lock": {
   "tooltip": false,
   "on-click": "sh -c '(sleep 0s; hyprlock)' & disown",
