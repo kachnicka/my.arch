@@ -8,8 +8,8 @@ return {
     { 'folke/lazydev.nvim', opts = { library = { plugins = { 'nvim-lspconfig' } } } },
   },
   config = function()
-    vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(vim.lsp.handlers.hover, { border = 'rounded' })
-    vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = 'rounded' })
+    -- rounded borders for all floats (hover, signature, diagnostics) via native 0.11+ option
+    vim.o.winborder = 'rounded'
 
     vim.api.nvim_create_autocmd('LspAttach', {
       group = vim.api.nvim_create_augroup('user-lsp-attach', { clear = true }),
@@ -29,7 +29,7 @@ return {
         map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
         local client = vim.lsp.get_client_by_id(event.data.client_id)
-        if client and client.supports_method 'textDocument/documentHighlight' then
+        if client and client:supports_method 'textDocument/documentHighlight' then
           local highlight_augroup = vim.api.nvim_create_augroup('user-lsp-highlight', { clear = false })
           vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
             buffer = event.buf,
@@ -43,7 +43,7 @@ return {
           })
         end
 
-        if client and client.supports_method 'textDocument/inlayHint' then
+        if client and client:supports_method 'textDocument/inlayHint' then
           map('<leader>th', function()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }, { bufnr = event.buf })
           end, '[T]oggle Inlay [H]ints')
@@ -61,6 +61,11 @@ return {
 
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+    -- advertise foldingRange so nvim-ufo can use LSP folds
+    capabilities.textDocument.foldingRange = {
+      dynamicRegistration = false,
+      lineFoldingOnly = true,
+    }
 
     --   local servers = {
     --     clangd = {
@@ -187,16 +192,14 @@ return {
     vim.list_extend(ensure_installed, { 'stylua' })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-    vim.lsp.set_log_level 'off'
+    vim.lsp.log.set_level 'off'
     -- Setup LSP servers using Neovim 0.11 APIs
     for server_name, server_config in pairs(servers) do
       local config = vim.tbl_deep_extend('force', { capabilities = capabilities }, server_config)
-      config.root_markers = server_config.root_dir and { server_config.root_dir(vim.fn.expand '%:p') } or nil
-      config.enable = function(client, bufnr)
-        if server_name == 'clangd' then
-          return vim.fn.filereadable(vim.fn.getcwd() .. 'compile_commands.json') == 1
+      if server_name == 'clangd' then
+        config.enable = function(client, bufnr)
+          return vim.fn.filereadable(vim.fn.getcwd() .. '/compile_commands.json') == 1
         end
-        return true
       end
       vim.lsp.config(server_name, config)
       require('mason-lspconfig').setup {}

@@ -9,17 +9,7 @@ return {
     vim.o.foldlevelstart = 99
     vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep: ,foldclose:'
 
-    local capabilities = vim.lsp.protocol.make_client_capabilities()
-    capabilities.textDocument.foldingRange = {
-      dynamicRegistration = false,
-      lineFoldingOnly = true,
-    }
-    local language_servers = vim.lsp.get_clients()
-    for _, ls in ipairs(language_servers) do
-      require('lspconfig')[ls].setup {
-        capabilities = capabilities,
-      }
-    end
+    -- foldingRange capability is advertised in lsp.lua; ufo picks it up automatically
     require('ufo').setup()
 
     vim.keymap.set('n', '<leader>zz', 'za', { desc = 'Fold toggle' })

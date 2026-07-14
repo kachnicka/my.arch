@@ -375,6 +375,7 @@ windowrule {
 windowrule {
     name = terminal-opacity
     match:class = Alacritty
+
     opacity = 0.95 override 0.85 override
 }
 
