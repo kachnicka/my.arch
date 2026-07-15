@@ -12,6 +12,13 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# validate args up front so we fail fast before making any system changes
+USERNAME="$1"
+if [ -z "$USERNAME" ]; then
+    echo " Error: username argument is required" >&2
+    exit 1
+fi
+
 echo -e "\nEdit: /etc/pacman.conf"
 PACMAN_FILE="/etc/pacman.conf"
 if [ ! -r "$PACMAN_FILE" ]; then
@@ -34,7 +41,7 @@ systemctl enable NetworkManager
 echo -e "\nEnable: fstrim.timer"
 systemctl enable fstrim.timer
 
-echo -e "\nEdit: /etc/sudoer"
+echo -e "\nEdit: /etc/sudoers"
 $PACMAN -S sudo
 SUDO_FILE="/etc/sudoers"
 SUDO_TEMP="/tmp/sudoers.tmp"
@@ -94,11 +101,6 @@ fi
 
 #
 
-USERNAME="$1"
-if [ -z "$USERNAME" ]; then
-    echo " Error: username argument is required" >&2
-    exit 1
-fi
 echo -e "\nAdd: user '$USERNAME'"
 $PACMAN -S zsh 
 if id "$USERNAME" &>/dev/null; then
@@ -117,7 +119,6 @@ elif grep -qi "AuthenticAMD" /proc/cpuinfo; then
     echo " detected: AMD"
     $PACMAN -S amd-ucode
 fi
-mkinitcpio -P
 
 echo -e "\nAdd: GPU driver"
 GPU_INFO=$(lspci | grep -E "VGA|3D")
@@ -126,8 +127,27 @@ if echo "$GPU_INFO" | grep -Eqi "AMD|Advanced Micro Devices"; then
     $PACMAN -S mesa lib32-mesa vulkan-radeon
 elif echo "$GPU_INFO" | grep -qi "NVIDIA"; then
     echo " detected: NVIDIA"
-    # nvidia-open requires Turing (RTX 2000) or newer; use nvidia (proprietary) for older cards
-    $PACMAN -S nvidia-open nvidia-utils lib32-nvidia-utils nvidia-settings
+    $PACMAN -S nvidia-open nvidia-utils lib32-nvidia-utils nvidia-settings \
+                egl-wayland libva-nvidia-driver
+
+    # kernel cmdline (modprobe.d loads too late to suppress simpledrm)
+    if ! grep -q "nvidia_drm.modeset=1" /etc/default/grub; then
+        echo " enabling nvidia_drm.modeset=1 + PreserveVideoMemoryAllocations"
+        sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="\([^"]*\)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1"/' /etc/default/grub
+    else
+        echo " modeset already enabled"
+    fi
+
+    # early KMS
+    if ! grep -qE "^MODULES=.*nvidia_drm" /etc/mkinitcpio.conf; then
+        echo " adding nvidia modules to mkinitcpio MODULES"
+        sed -i 's/^MODULES=(\([^)]*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+    else
+        echo " nvidia modules already in MODULES"
+    fi
+
+    systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
+    grub-mkconfig -o /boot/grub/grub.cfg
 elif echo "$GPU_INFO" | grep -qi "Intel"; then
     echo " detected: Intel"
     # intel-media-driver for Broadwell+; use libva-intel-driver for pre-Haswell
@@ -136,6 +156,9 @@ else
     echo " detected: nothing"
     echo " there is nothing to do"
 fi
+
+# Rebuild initramfs after GPU drivers so modules are picked up.
+mkinitcpio -P
 
 echo -e "\nAdd: NTP clock sync"
 if timedatectl show | grep -q "NTPSynchronized=no"; then
@@ -157,7 +180,6 @@ $PACMAN -S hyprland uwsm xdg-user-dirs
 PROFILE_FILE="/home/$USERNAME/.zprofile"
 if [ ! -f "$PROFILE_FILE" ]; then
     echo " adding $PROFILE_FILE"
-    #echo -E "if uwsm check may-start && uwsm select; then\n  exec uwsm start default\nfi" > "$PROFILE_FILE"
     cat <<EOF > "$PROFILE_FILE"
 xdg-user-dirs-update
 if uwsm check may-start && uwsm select; then

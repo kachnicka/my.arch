@@ -56,7 +56,7 @@ local autostart = {
 	{ proc = "dunst",           cmd = "dunst",                                      wayland_bound = true },
 	{ proc = "udiskie",         cmd = "udiskie --no-menu-update-workaround" },
 	{ proc = "wl-clip-persist", cmd = "wl-clip-persist --clipboard regular",        wayland_bound = true },
-	{ proc = "gammastep",       cmd = "gammastep -l 49.195:16.608 -t6500:4500 -m wayland", wayland_bound = true },
+	{ proc = "gammastep",       cmd = "gammastep -l 49.195:16.608 -t6500:4500 -m wayland", wayland_bound = true }, -- HACK: hardcoded to Brno -- edit for your location
 }
 
 -- For a wayland_bound daemon: kill any pid bound to a DIFFERENT Hyprland
@@ -103,10 +103,7 @@ hl.on("config.reloaded", launch_autostart)
 ---- ENVIRONMENT VARIABLES ----
 -------------------------------
 
--- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
-hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+-- Env vars: see uwsm env.d drop-ins (hl.env only reaches direct children).
 
 -----------------------
 ----- PERMISSIONS -----
@@ -430,7 +427,8 @@ hl.window_rule({
 	float = true,
 	pin = true,
 	size = { 730, 380 },
-	move = { "915", "monitor_h-window_h-1" },
+	-- center horizontally on any monitor; bottom-anchored (resolution-independent)
+	move = { "monitor_w/2-window_w/2", "monitor_h-window_h-1" },
 	no_blur = true,
 	no_initial_focus = true,
 	opacity = "0.8 override 0.25 override",

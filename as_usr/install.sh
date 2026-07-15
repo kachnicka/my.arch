@@ -7,7 +7,7 @@ $PACMAN -S base-devel vulkan-devel llvm clang libc++ lld cmake ninja mold git py
 $PACMAN -S renderdoc valgrind
 
 # dev env
-$PACMAN -S ghostty tmux neovim npm ripgrep unzip
+$PACMAN -S ghostty tmux neovim npm ripgrep unzip opencode
 $PACMAN -S noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu
 $PACMAN -S ttf-jetbrains-mono ttf-jetbrains-mono-nerd
 
@@ -37,11 +37,17 @@ $PACMAN -S zsh-syntax-highlighting zsh-history-substring-search
 $PACMAN -S stow
 
 # apps
-# always rebuilds yay to catch updates since aur-bin packages are fast
+# makepkg 7.0+ uses `sudo -k` (drops creds after each op → re-prompt).
+# PACMAN_AUTH=(sudo) prevents it; arrays don't export so must be in ~/.makepkg.conf.
+MAKEPKG_USER_CONF="$HOME/.makepkg.conf"
+touch "$MAKEPKG_USER_CONF"
+grep -qE '^[[:space:]]*PACMAN_AUTH=' "$MAKEPKG_USER_CONF" \
+  || printf '\nPACMAN_AUTH=(sudo)\n' >> "$MAKEPKG_USER_CONF"
+sudo -v
 rm -rf /tmp/yay
 git clone https://aur.archlinux.org/yay-bin.git /tmp/yay
 pushd /tmp/yay
-PACMAN="sudo pacman" makepkg -si --needed --noconfirm
+makepkg -si --needed --noconfirm
 popd
 $PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie
 $PACMAN -S grim slurp satty wl-clipboard wl-clip-persist
@@ -62,6 +68,7 @@ systemctl --user enable pipewire pipewire-pulse wireplumber
 $PACMAN -S hyprpaper hypridle waybar libnotify dunst
 $PACMAN -S qt5-wayland qt6-wayland adw-gtk-theme
 $PACMAN -S gammastep brightnessctl ddcutil
+echo "  WARNING: gammastep location hardcoded to Brno in hyprland.lua -- edit for your location."
 $PACMAN -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 yay --needed --noconfirm -S tofi
 
