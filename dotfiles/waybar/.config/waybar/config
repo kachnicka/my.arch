@@ -42,7 +42,7 @@
         "off": "󰂲",
         "connected": "󰂱",
         },
-    "on-click": "blueman-manager",
+    "on-click": "$HOME/.local/bin/tofi-bluetooth",
     "tooltip-format-connected":"{device_enumerate}"
   },
 

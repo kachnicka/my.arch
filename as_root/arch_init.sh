@@ -35,8 +35,73 @@ fi
 $PACMAN -Syu
 $PACMAN -S man-db man-pages
 
+echo -e "\nEnable: paccache timer"
+$PACMAN -S pacman-contrib
+systemctl enable paccache.timer
+
+echo -e "\nUpdate: pacman mirrorlist"
+$PACMAN -S rate-mirrors
+rate-mirrors --allow-root arch > /etc/pacman.d/mirrorlist
+
 echo -e "\nEnable: NetworkManager"
 systemctl enable NetworkManager
+
+echo -e "\nAdd: nftables firewall"
+$PACMAN -S nftables
+NFT_CONF="/etc/nftables.conf"
+cat <<'NFT_EOF' > "$NFT_CONF"
+#!/usr/bin/nft -f
+
+flush ruleset
+
+table inet filter {
+	chain input {
+		type filter hook input priority 0; policy drop;
+
+		ct state established,related accept
+		iif "lo" accept
+
+		# SSH
+		tcp dport 22 accept
+
+		# web server
+		tcp dport { 80, 443 } accept
+
+		icmp type echo-request accept
+		ip6 nexthdr icmpv6 icmpv6 type { echo-request, nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+	}
+
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+	}
+
+	chain output {
+		type filter hook output priority 0; policy accept;
+	}
+}
+NFT_EOF
+if nft -c -f "$NFT_CONF" 2>/dev/null; then
+	systemctl enable nftables
+else
+	echo " Warning: nftables syntax check skipped (nf_tables may not be loaded yet)"
+	systemctl enable nftables
+fi
+
+echo -e "\nAdd: SSH server"
+$PACMAN -S openssh
+SSHD_DROPIN="/etc/ssh/sshd_config.d/50-custom.conf"
+mkdir -p /etc/ssh/sshd_config.d
+cat <<'EOF' > "$SSHD_DROPIN"
+PermitRootLogin no
+PasswordAuthentication yes
+EOF
+if sshd -t 2>/dev/null; then
+	systemctl enable sshd
+else
+	echo " Error: sshd_config syntax check failed" >&2
+	rm -f "$SSHD_DROPIN"
+	exit 1
+fi
 
 echo -e "\nEnable: fstrim.timer"
 systemctl enable fstrim.timer
@@ -173,6 +238,39 @@ fi
 echo -e "\nAdd: Audio stack"
 $PACMAN -S rtkit
 systemctl enable rtkit-daemon.service
+
+echo -e "\nAdd: Bluetooth"
+if ls /sys/class/bluetooth/ 2>/dev/null | grep -q "^hci"; then
+	echo " detected: bluetooth hardware"
+	$PACMAN -S bluez bluez-utils
+	systemctl enable bluetooth
+else
+	echo " detected: nothing"
+	echo " there is nothing to do"
+fi
+
+echo -e "\nAdd: Power management"
+CHASSIS=$(hostnamectl chassis-type 2>/dev/null || echo "unknown")
+HAS_BATTERY=$(ls /sys/class/power_supply/ 2>/dev/null | grep -q "^BAT" && echo yes || echo no)
+if [ "$CHASSIS" = "laptop" ] || [ "$CHASSIS" = "convertible" ] || [ "$CHASSIS" = "tablet" ] || [ "$HAS_BATTERY" = "yes" ]; then
+	echo " detected: $CHASSIS"
+	echo "Install power management? (y/N)"
+	read -r response
+	if [[ "$response" =~ ^[Yy]$ ]]; then
+		# AMD laptops: power-profiles-daemon (platform_profile integration).
+		# Intel laptops: TLP (aggressive runtime PM) + tlp-pd (PPD D-Bus compat).
+		if grep -qi "AuthenticAMD" /proc/cpuinfo; then
+			$PACMAN -S power-profiles-daemon
+			systemctl enable power-profiles-daemon
+		else
+			$PACMAN -S tlp tlp-pd
+			systemctl enable tlp
+		fi
+	fi
+else
+	echo " detected: $CHASSIS"
+	echo " there is nothing to do"
+fi
 
 echo -e "\nAdd: Hyprland"
 # TODO: uwsm for user now, maybe greetd+tuigreet later?

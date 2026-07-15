@@ -49,7 +49,8 @@ git clone https://aur.archlinux.org/yay-bin.git /tmp/yay
 pushd /tmp/yay
 makepkg -si --needed --noconfirm
 popd
-$PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie
+yay -Y --save --removemake --cleanafter
+$PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie jq
 $PACMAN -S grim slurp satty wl-clipboard wl-clip-persist
 yay --needed --noconfirm -S brave-bin
 
@@ -58,11 +59,7 @@ $PACMAN -S pipewire wireplumber playerctl
 $PACMAN -S pipewire-pulse pipewire-alsa pipewire-audio
 $PACMAN -S pavucontrol
 systemctl --user enable pipewire pipewire-pulse wireplumber
-# $PACMAN -S pipewire-jack
-# $PACMAN -S libcamera
-# as_root:
-# $PACMAN -S bluez bluez-utils pipewire-bluez5
-# sudo systemctl enable bluetooth
+# BT audio: built into pipewire-audio (already installed above); no extra package.
 
 # hyprland
 $PACMAN -S hyprpaper hypridle waybar libnotify dunst
