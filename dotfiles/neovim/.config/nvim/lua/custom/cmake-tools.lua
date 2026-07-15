@@ -1,4 +1,6 @@
-require('cmake-tools').setup {}
+require('cmake-tools').setup {
+    cmake_show_disabled_build_presets = false,
+}
 
 vim.keymap.set('n', '<leader>cg', '<cmd>CMakeGenerate<CR>', { desc = '[C]Make [G]enerate' })
 vim.keymap.set('n', '<leader>cG', '<cmd>CMakeGenerate!<CR>', { desc = '[C]Make Clean [G]enerate' })
