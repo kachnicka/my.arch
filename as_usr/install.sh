@@ -7,7 +7,7 @@ $PACMAN -S base-devel vulkan-devel llvm clang libc++ lld cmake ninja mold git py
 $PACMAN -S renderdoc valgrind
 
 # dev env
-$PACMAN -S alacritty tmux neovim npm ripgrep unzip
+$PACMAN -S ghostty tmux neovim npm ripgrep unzip
 $PACMAN -S noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu
 $PACMAN -S ttf-jetbrains-mono ttf-jetbrains-mono-nerd
 

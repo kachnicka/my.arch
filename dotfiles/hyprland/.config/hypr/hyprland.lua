@@ -29,7 +29,7 @@ hl.config({
 ---------------------
 
 -- Set programs that you use
-local terminal = "alacritty"
+local terminal = "ghostty"
 local fileManager = "dolphin"
 local menu = "tofi-drun | xargs -I{} hyprctl dispatch \"hl.dsp.exec_cmd('{}')\""
 
@@ -458,8 +458,8 @@ hl.window_rule({
 })
 
 hl.window_rule({
-	name = "terminal-opacity",
-	match = { class = "Alacritty" },
+	name = "terminal-opacity-ghostty",
+	match = { class = "com.mitchellh.ghostty" },
 
 	opacity = "0.95 override 0.85 override",
 })

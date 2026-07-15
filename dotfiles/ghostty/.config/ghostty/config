@@ -1,0 +1,27 @@
+# Ghostty config. Key=value flat file. No live-reload — use ctrl+shift+, after edits.
+
+command = /bin/zsh
+
+font-family = JetBrainsMono Nerd Font
+font-size = 10.5
+
+theme = "Gruvbox Material Dark"
+# verify: ghostty +list-themes | grep -i gruvbox
+
+# alacritty-style fat inverting block, no blink. Must come after theme=
+# (theme sets fixed cursor colors; these override with dynamic cell colors).
+cursor-style = block
+cursor-color = cell-foreground
+cursor-text = cell-background
+cursor-style-blink = false
+adjust-cursor-thickness = 2
+
+# ghostty has no default scroll binds on Linux (alacritty does)
+keybind = shift+page_up=scroll_page_up
+keybind = shift+page_down=scroll_page_down
+
+# alacritty closes immediately; ghostty prompts by default
+confirm-close-surface = false
+
+# no-cursor: stop shell-integration forcing a blinking bar at the zsh prompt
+shell-integration-features = ssh-env,ssh-terminfo,no-cursor
