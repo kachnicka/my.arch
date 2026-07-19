@@ -4,6 +4,9 @@ command = /bin/zsh
 
 font-family = JetBrainsMono Nerd Font
 font-size = 10.5
+# disable ligatures (on by default for this font)
+# font-feature = -liga
+# font-feature = -calt
 
 theme = "Gruvbox Material Dark"
 # verify: ghostty +list-themes | grep -i gruvbox
