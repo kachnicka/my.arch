@@ -79,12 +79,12 @@ return {
           '--fallback-style=llvm',
           '--experimental-modules-support',
         },
-        root_markers = {
-          '.clangd',
-          '.clang-format',
-          'compile_commands.json',
-          '.git',
-        },
+        -- Only start clangd when compile_commands.json exists in project root.
+        -- Previously used config.enable (dead code — native vim.lsp ignores it).
+        root_dir = function(bufnr, on_dir)
+          local root = vim.fs.root(bufnr, { 'compile_commands.json' })
+          if root then on_dir(root) end
+        end,
       },
       glsl_analyzer = {
         cmd = { 'glsl_analyzer' },
@@ -130,16 +130,16 @@ return {
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
     vim.lsp.log.set_level 'off'
-    -- Setup LSP servers using Neovim 0.11 APIs
+
+    -- Register all server configs (Neovim 0.11+ API).
+    -- vim.lsp.config() only registers — does NOT start servers.
     for server_name, server_config in pairs(servers) do
       local config = vim.tbl_deep_extend('force', { capabilities = capabilities }, server_config)
-      if server_name == 'clangd' then
-        config.enable = function(client, bufnr)
-          return vim.fn.filereadable(vim.fn.getcwd() .. '/compile_commands.json') == 1
-        end
-      end
       vim.lsp.config(server_name, config)
-      require('mason-lspconfig').setup {}
     end
+
+    -- Enable all configured servers explicitly (Neovim 0.11+ API).
+    -- Previously relied on mason-lspconfig's automatic_enable side effect.
+    vim.lsp.enable(vim.tbl_keys(servers))
   end,
 }

@@ -10,7 +10,7 @@ return {
 
     -- Install parsers (no-op if already installed)
     require('nvim-treesitter').install {
-      'bash', 'c', 'diff', 'glsl', 'html', 'lua', 'luadoc',
+      'bash', 'c', 'cpp', 'diff', 'glsl', 'html', 'lua', 'luadoc',
       'markdown', 'markdown_inline', 'vim', 'vimdoc',
     }
 
