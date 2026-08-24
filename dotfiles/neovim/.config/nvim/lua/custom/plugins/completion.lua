@@ -1,6 +1,6 @@
 return {
-  'hrsh7th/nvim-cmp',
-  event = 'InsertEnter',
+  'saghen/blink.cmp',
+  version = '1.*',
   dependencies = {
     {
       'L3MON4D3/LuaSnip',
@@ -10,13 +10,22 @@ return {
         end
         return 'make install_jsregexp'
       end)(),
-      dependencies = {},
     },
-    'saadparwaiz1/cmp_luasnip',
-    'hrsh7th/cmp-nvim-lsp',
-    'hrsh7th/cmp-path',
   },
-  config = function()
-    require 'custom.completion'
-  end,
+  opts = {
+    keymap = {
+      preset = 'default',
+      ['<C-e>'] = { 'select_prev' },
+      ['<C-o>'] = { 'cancel' },
+      ['<C-l>'] = { 'snippet_forward', 'fallback' },
+      ['<C-h>'] = { 'snippet_backward', 'fallback' },
+    },
+    sources = {
+      default = { 'lsp', 'path', 'snippets' },
+    },
+    snippets = { preset = 'luasnip' },
+    completion = {
+      accept = { auto_brackets = { enabled = true } },
+    },
+  },
 }
