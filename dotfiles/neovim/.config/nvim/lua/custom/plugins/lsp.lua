@@ -96,7 +96,22 @@ return {
         filetypes = { 'hlsl', 'shaderslang', 'slang' },
         root_markers = { '.clang-format' },
       },
-      pyright = {},
+      ruff = {
+        init_options = {
+          settings = {
+            organizeImports = true,
+            fixAll = true,
+            format = { preview = true },
+          },
+        },
+      },
+      ty = {
+        settings = {
+          ty = {
+            showSyntaxErrors = false,
+          },
+        },
+      },
       lua_ls = {
         settings = {
           Lua = {

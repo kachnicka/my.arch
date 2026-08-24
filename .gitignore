@@ -1,0 +1,2 @@
+dotfiles/bin/.local/bin/*
+!dotfiles/bin/.local/bin/tofi-bluetooth
