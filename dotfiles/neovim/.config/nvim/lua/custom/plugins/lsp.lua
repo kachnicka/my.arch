@@ -82,6 +82,9 @@ return {
         -- Only start clangd when compile_commands.json exists in project root.
         -- Previously used config.enable (dead code — native vim.lsp ignores it).
         root_dir = function(bufnr, on_dir)
+          -- Skip non-file:// buffers (fugitive:// diff buffers cause
+          -- "clangd only supports 'file' URI scheme" errors).
+          if not vim.startswith(vim.uri_from_bufnr(bufnr), 'file:') then return end
           local root = vim.fs.root(bufnr, { 'compile_commands.json' })
           if root then on_dir(root) end
         end,
