@@ -89,6 +89,8 @@ fi
 
 echo -e "\nAdd: SSH server"
 $PACMAN -S openssh
+# generate host keys so sshd -t does not fail on fresh install ("no hostkeys available")
+ssh-keygen -A
 SSHD_DROPIN="/etc/ssh/sshd_config.d/50-custom.conf"
 mkdir -p /etc/ssh/sshd_config.d
 cat <<'EOF' > "$SSHD_DROPIN"
@@ -171,7 +173,7 @@ $PACMAN -S zsh
 if id "$USERNAME" &>/dev/null; then
     echo " there is nothing to do"
 else
-    useradd -m -G wheel,games,ftp,http -s /bin/zsh "$USERNAME"
+    useradd -m -G wheel,games -s /bin/zsh "$USERNAME"
     passwd "$USERNAME"
     echo " added '$USERNAME'"
 fi
@@ -189,30 +191,64 @@ echo -e "\nAdd: GPU driver"
 GPU_INFO=$(lspci | grep -E "VGA|3D")
 if echo "$GPU_INFO" | grep -Eqi "AMD|Advanced Micro Devices"; then
     echo " detected: AMD"
-    $PACMAN -S mesa lib32-mesa vulkan-radeon
+    $PACMAN -S mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
 elif echo "$GPU_INFO" | grep -qi "NVIDIA"; then
     echo " detected: NVIDIA"
-    $PACMAN -S nvidia-open nvidia-utils lib32-nvidia-utils nvidia-settings \
-                egl-wayland libva-nvidia-driver
 
-    # kernel cmdline (modprobe.d loads too late to suppress simpledrm)
-    if ! grep -q "nvidia_drm.modeset=1" /etc/default/grub; then
-        echo " enabling nvidia_drm.modeset=1 + PreserveVideoMemoryAllocations"
-        sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="\([^"]*\)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1"/' /etc/default/grub
+    # kernel variant: prebuilt nvidia-open for 'linux', dkms + headers otherwise
+    if pacman -Qq linux &>/dev/null; then
+        NVIDIA_KMOD="nvidia-open"
+        NVIDIA_HEADERS=""
     else
-        echo " modeset already enabled"
+        NVIDIA_KMOD="nvidia-open-dkms"
+        NVIDIA_HEADERS=""
+        if pacman -Qq linux-lts &>/dev/null; then
+            NVIDIA_HEADERS="linux-lts-headers"
+        elif pacman -Qq linux-zen &>/dev/null; then
+            NVIDIA_HEADERS="linux-zen-headers"
+        else
+            # any other kernel: match headers to installed kernel package
+            OTHER_KERNEL=$(pacman -Qq | grep -E '^linux(-|$)' | head -1)
+            if [ -n "$OTHER_KERNEL" ]; then
+                NVIDIA_HEADERS="${OTHER_KERNEL}-headers"
+            fi
+        fi
     fi
 
-    # early KMS
-    if ! grep -qE "^MODULES=.*nvidia_drm" /etc/mkinitcpio.conf; then
-        echo " adding nvidia modules to mkinitcpio MODULES"
-        sed -i 's/^MODULES=(\([^)]*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
-    else
-        echo " nvidia modules already in MODULES"
-    fi
+    # GPU generation: nvidia-open requires GSP firmware (Turing+);
+    # pre-Turing (GTX 10xx and older) unsupported since 590 mainline (Dec 2025)
+    NVIDIA_MODEL=$(lspci | grep -iE "VGA|3D" | grep -i "NVIDIA" | head -1)
+    if echo "$NVIDIA_MODEL" | grep -qiE "RTX|GTX 16"; then
+        $PACMAN -S $NVIDIA_KMOD $NVIDIA_HEADERS nvidia-utils lib32-nvidia-utils \
+                    nvidia-settings egl-wayland libva-nvidia-driver
 
-    systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
-    grub-mkconfig -o /boot/grub/grub.cfg
+        # kernel cmdline (modprobe.d loads too late to suppress simpledrm)
+        # check each param independently so a present modeset does not skip preserve flag
+        for param in nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1; do
+            if ! grep -q "$param" /etc/default/grub; then
+                echo " adding $param to GRUB_CMDLINE_LINUX_DEFAULT"
+                sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"\([^\"]*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1 $param\"/" /etc/default/grub
+            fi
+        done
+
+        # early KMS
+        if ! grep -qE "^MODULES=.*nvidia_drm" /etc/mkinitcpio.conf; then
+            echo " adding nvidia modules to mkinitcpio MODULES"
+            sed -i 's/^MODULES=(\([^)]*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+        else
+            echo " nvidia modules already in MODULES"
+        fi
+
+        # hibernate omitted: early MODULES + VRAM preservation breaks hibernation (ArchWiki)
+        systemctl enable nvidia-suspend.service nvidia-resume.service
+    else
+        # pre-Turing: nvidia-open will not load (black screen), install nouveau fallback
+        echo " Warning: Pre-Turing NVIDIA GPU detected ($NVIDIA_MODEL)"
+        echo " nvidia-open requires GSP firmware (Turing+). Installing nouveau fallback."
+        echo " After setup, install nvidia-580xx-dkms from AUR for proprietary drivers."
+        # nouveau kernel module is built into stock 'linux' — only mesa needed for Wayland
+        $PACMAN -S mesa lib32-mesa
+    fi
 elif echo "$GPU_INFO" | grep -qi "Intel"; then
     echo " detected: Intel"
     # intel-media-driver for Broadwell+; use libva-intel-driver for pre-Haswell
@@ -224,6 +260,10 @@ fi
 
 # Rebuild initramfs after GPU drivers so modules are picked up.
 mkinitcpio -P
+
+# Regenerate grub.config unconditionally: microcode initrd + kernel params
+# must be picked up for all GPU types (AMD/Intel/NVIDIA/none)
+grub-mkconfig -o /boot/grub/grub.cfg
 
 echo -e "\nAdd: NTP clock sync"
 if timedatectl show | grep -q "NTPSynchronized=no"; then
@@ -275,20 +315,8 @@ fi
 echo -e "\nAdd: Hyprland"
 # TODO: uwsm for user now, maybe greetd+tuigreet later?
 $PACMAN -S hyprland uwsm xdg-user-dirs
-PROFILE_FILE="/home/$USERNAME/.zprofile"
-if [ ! -f "$PROFILE_FILE" ]; then
-    echo " adding $PROFILE_FILE"
-    cat <<EOF > "$PROFILE_FILE"
-xdg-user-dirs-update
-if uwsm check may-start && uwsm select; then
-  exec uwsm start default
-fi
-EOF
-    chown "$USERNAME":"$USERNAME" "$PROFILE_FILE"
-else
-    echo " $PROFILE_FILE already exists"
-    echo "  there is nothing to do"
-fi
+# .zprofile intentionally not written here: owned by dotfiles repo
+# (dotfiles/zsh/.zprofile handles xdg-user-dirs-update + uwsm start)
 
 echo -e "\nAdd: Basic fonts"
 $PACMAN -S ttf-opensans 

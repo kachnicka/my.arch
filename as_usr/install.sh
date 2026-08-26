@@ -31,7 +31,7 @@ else
     git pull
     popd
 fi
-$PACMAN -S zsh-syntax-highlighting zsh-history-substring-search
+$PACMAN -S zsh-syntax-highlighting zsh-autosuggestions zsh-history-substring-search
 
 # config management
 $PACMAN -S stow
