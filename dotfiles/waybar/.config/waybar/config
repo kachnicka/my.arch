@@ -72,16 +72,16 @@
   },
 
   "network": {
-    "format-wifi": "󰤢",
-    "format-ethernet": "󰈀 ",
+    "format-wifi": "󰤨 {essid} ({signalStrength}%)",
+    "format-ethernet": "󰈀 {ifname}",
     "format-disconnected": "󰤠 ",
     "interval": 5,
     "tooltip-format": "{ifname} via {gwaddr} 󰊗",
-    "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
-    "tooltip-format-ethernet": "{ifname} ",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%)  {ipaddr}",
+    "tooltip-format-ethernet": "{ifname}  {ipaddr} ({bandwidthUpBits}↑ {bandwidthDownBits}↓)",
     "tooltip-format-disconnected": "Disconnected",
-    "on-click": "nm-connection-editor"
-
+    "on-click": "nm-connection-editor",
+    "on-click-right": "nmcli radio wifi $(nmcli radio wifi | grep -q enabled && echo off || echo on)"
  },
 
   "cpu": {

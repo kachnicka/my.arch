@@ -10,8 +10,19 @@ return {
 
     -- Install parsers (no-op if already installed)
     require('nvim-treesitter').install {
-      'bash', 'c', 'cpp', 'diff', 'glsl', 'html', 'lua', 'luadoc',
-      'markdown', 'markdown_inline', 'vim', 'vimdoc',
+      'bash',
+      'c',
+      'cpp',
+      'diff',
+      'glsl',
+      'html',
+      'lua',
+      'luadoc',
+      'markdown',
+      'markdown_inline',
+      'vim',
+      'vimdoc',
+      'tcl',
     }
 
     -- Enable treesitter highlighting + indentation for filetypes with a parser.
