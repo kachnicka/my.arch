@@ -7,7 +7,8 @@ $PACMAN -S base-devel vulkan-devel llvm clang libc++ lld cmake ninja mold git py
 $PACMAN -S renderdoc valgrind
 
 # dev env
-$PACMAN -S ghostty tmux neovim npm ripgrep unzip opencode
+# tree-sitter-cli: nvim-treesitter main branch generates parsers from grammar.js
+$PACMAN -S ghostty tmux neovim tree-sitter-cli npm ripgrep unzip opencode
 $PACMAN -S noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu
 $PACMAN -S ttf-jetbrains-mono ttf-jetbrains-mono-nerd
 
@@ -50,7 +51,7 @@ pushd /tmp/yay
 makepkg -si --needed --noconfirm
 popd
 yay -Y --save --removemake --cleanafter
-$PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie jq
+$PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie jq xdg-utils
 $PACMAN -S grim slurp satty wl-clipboard wl-clip-persist
 yay --needed --noconfirm -S brave-bin
 
@@ -62,7 +63,8 @@ systemctl --user enable pipewire pipewire-pulse wireplumber
 # BT audio: built into pipewire-audio (already installed above); no extra package.
 
 # hyprland
-$PACMAN -S hyprpaper hypridle waybar libnotify dunst
+# hyprlock: waybar lock module + hypridle
+$PACMAN -S hyprpaper hypridle hyprlock waybar libnotify dunst
 $PACMAN -S qt5-wayland qt6-wayland adw-gtk-theme
 $PACMAN -S gammastep brightnessctl ddcutil
 echo "  WARNING: gammastep location hardcoded to Brno in hyprland.lua -- edit for your location."
@@ -70,5 +72,5 @@ $PACMAN -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 yay --needed --noconfirm -S tofi
 
 # apps
-$PACMAN -S imv gimp
+$PACMAN -S imv gimp nm-connection-editor
 # yay --needed --noconfirm -S tev

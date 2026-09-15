@@ -1,4 +1,5 @@
 program_options:
+  appindicator: true
   tray: auto
   menu: flat
   notify: true

@@ -50,13 +50,13 @@ local menu = "tofi-drun | xargs -I{} hyprctl dispatch \"hl.dsp.exec_cmd('{}')\""
 -- HYPRLAND_INSTANCE_SIGNATURE differs from the current one and relaunch,
 -- instead of trusting a bare `pgrep`.
 local autostart = {
-	{ proc = "hyprpaper",       cmd = "hyprpaper",                                  wayland_bound = true },
-	{ proc = "hypridle",        cmd = "hypridle",                                   wayland_bound = true },
-	{ proc = "waybar",          cmd = "waybar",                                     wayland_bound = true },
-	{ proc = "dunst",           cmd = "dunst",                                      wayland_bound = true },
-	{ proc = "udiskie",         cmd = "udiskie --no-menu-update-workaround" },
-	{ proc = "wl-clip-persist", cmd = "wl-clip-persist --clipboard regular",        wayland_bound = true },
-	{ proc = "gammastep",       cmd = "gammastep -l 49.195:16.608 -t6500:4500 -m wayland", wayland_bound = true }, -- HACK: hardcoded to Brno -- edit for your location
+	{ proc = "hyprpaper", cmd = "hyprpaper", wayland_bound = true },
+	{ proc = "hypridle", cmd = "hypridle", wayland_bound = true },
+	{ proc = "waybar", cmd = "waybar", wayland_bound = true },
+	{ proc = "dunst", cmd = "dunst", wayland_bound = true },
+	{ proc = "udiskie", cmd = "udiskie", wayland_bound = true },
+	{ proc = "wl-clip-persist", cmd = "wl-clip-persist --clipboard regular", wayland_bound = true },
+	{ proc = "gammastep", cmd = "gammastep -l 49.195:16.608 -t6500:4500 -m wayland", wayland_bound = true }, -- HACK: hardcoded to Brno -- edit for your location
 }
 
 -- For a wayland_bound daemon: kill any pid bound to a DIFFERENT Hyprland
@@ -64,17 +64,18 @@ local autostart = {
 -- THIS session remains. Without this, a stale daemon survives a compositor
 -- restart and `pgrep` treats it as "already running" forever.
 local function launch_bound(entry)
-	local sh = "sig=$HYPRLAND_INSTANCE_SIGNATURE\n"
-		.. "found=0\n"
-		.. "for p in $(pgrep -x " .. entry.proc .. "); do\n"
-		.. "  psig=$(tr '\\0' '\\n' < /proc/$p/environ 2>/dev/null | sed -n 's/^HYPRLAND_INSTANCE_SIGNATURE=//p')\n"
-		.. "  if [ \"$psig\" != \"$sig\" ]; then\n"
-		.. "    kill \"$p\" 2>/dev/null\n"
-		.. "  else\n"
-		.. "    found=1\n"
-		.. "  fi\n"
-		.. "done\n"
-		.. "[ \"$found\" = 1 ] || " .. entry.cmd
+	local sh = [[
+sig=$HYPRLAND_INSTANCE_SIGNATURE
+found=0
+for p in $(pgrep -x ]] .. entry.proc .. [[); do
+  psig=$(tr '\0' '\n' < /proc/$p/environ 2>/dev/null | sed -n 's/^HYPRLAND_INSTANCE_SIGNATURE=//p')
+  if [ "$psig" != "$sig" ]; then
+    kill "$p" 2>/dev/null
+  else
+    found=1
+  fi
+done
+[ "$found" = 1 ] || ]] .. entry.cmd
 	hl.exec_cmd(sh)
 end
 
