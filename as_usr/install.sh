@@ -23,15 +23,26 @@ else
 fi
 ~/.config/tmux/plugins/tpm/bin/install_plugins all
 
+# pure prompt: upstream sindresorhus/pure pinned to a version tag.
+# ghostty >=1.3 injects OSC 133 marks into multiline PS1; the old
+# ivan-volnov/pure fork re-parses PROMPT via a newline sentinel and
+# duplicates the preprompt under that injection. Upstream >=1.27 builds
+# PROMPT once from psvar and never re-parses it.
 ZSH_PURE_CONFIG_PATH=~/.config/zsh/pure
+ZSH_PURE_VERSION=v1.28.3
+ZSH_PURE_REPO=https://github.com/sindresorhus/pure
 if [ ! -d "$ZSH_PURE_CONFIG_PATH" ]; then
-    mkdir -p "$ZSH_PURE_CONFIG_PATH"
-    git clone https://github.com/ivan-volnov/pure "$ZSH_PURE_CONFIG_PATH"
-else
-    pushd "$ZSH_PURE_CONFIG_PATH"
-    git pull
-    popd
+    git clone "$ZSH_PURE_REPO" "$ZSH_PURE_CONFIG_PATH"
 fi
+pushd "$ZSH_PURE_CONFIG_PATH" >/dev/null
+# migrate clones that still point at the dead ivan-volnov fork
+if [ "$(git remote get-url origin)" != "$ZSH_PURE_REPO" ]; then
+    git remote set-url origin "$ZSH_PURE_REPO"
+fi
+# pin to tag: idempotent, and never does `git pull` (fails on detached HEAD)
+git fetch --tags origin
+git checkout --force "$ZSH_PURE_VERSION"
+popd >/dev/null
 $PACMAN -S zsh-syntax-highlighting zsh-autosuggestions zsh-history-substring-search
 
 # config management
