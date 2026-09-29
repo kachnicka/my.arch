@@ -56,6 +56,7 @@ local autostart = {
 	{ proc = "dunst", cmd = "dunst", wayland_bound = true },
 	{ proc = "udiskie", cmd = "udiskie", wayland_bound = true },
 	{ proc = "wl-clip-persist", cmd = "wl-clip-persist --clipboard regular", wayland_bound = true },
+	{ proc = "handy", cmd = "handy --start-hidden", wayland_bound = true }, -- voice dictation, tray only
 	{ proc = "gammastep", cmd = "gammastep -l 49.195:16.608 -t6500:4500 -m wayland", wayland_bound = true }, -- HACK: hardcoded to Brno -- edit for your location
 }
 
@@ -308,6 +309,26 @@ hl.bind("SUPER + SHIFT + Q", hl.dsp.window.close())
 hl.bind("SUPER + SHIFT + M", hl.dsp.exec_cmd('loginctl terminate-user ""'))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
+-- Handy push-to-talk with clipboard preservation (see ~/.local/bin/handy-ptt):
+-- press = snapshot clipboard + start, release = stop + restore after paste.
+-- PTT key is host-specific: default menu (Application) key; keyboards
+-- without it (laptop) override by hostname below. Avoid bare modifier keys
+-- (alt etc.) — they break modifier combos.
+local ptt_key = "menu"
+local hostname = ""
+local hfile = io.open("/etc/hostname", "r")
+if hfile then
+	hostname = hfile:read("*l") or ""
+	hfile:close()
+end
+-- NB: capslock as PTT may still toggle the kernel caps LED — verify on laptop
+if hostname == "laptop-hostname" then ptt_key = "capslock" end -- edit for laptop
+
+local scripts_dir = (os.getenv("HOME") or "~") .. "/.local/bin"
+hl.bind(ptt_key, hl.dsp.exec_cmd(scripts_dir .. "/handy-ptt press"))
+hl.bind(ptt_key, hl.dsp.exec_cmd(scripts_dir .. "/handy-ptt release"), { release = true })
+-- recover the last transcript after the old clipboard was restored (~1.5s)
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(scripts_dir .. "/handy-last"))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo()) -- dwindle
 hl.bind(mainMod .. " + T", hl.dsp.layout("togglesplit")) -- dwindle

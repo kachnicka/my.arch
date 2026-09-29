@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# handy-last — put the last Handy dictation transcript back on the clipboard.
+# The transcript is normally on the clipboard only ~1.5s before the old
+# clipboard is restored; use this to paste it again elsewhere.
+# NB: keep this path in sync with STATE_DIR in handy-ptt.
+set -euo pipefail
+
+F="${XDG_RUNTIME_DIR:-/tmp}/handy-ptt/last-transcript.txt"
+if [ -s "$F" ]; then
+  wl-copy < "$F"
+  notify-send "Handy" "Last transcript → clipboard" 2>/dev/null || true
+else
+  echo "no transcript yet (or runtime state was cleared)" >&2
+  exit 1
+fi

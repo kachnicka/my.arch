@@ -63,7 +63,7 @@ makepkg -si --needed --noconfirm
 popd
 yay -Y --save --removemake --cleanafter
 $PACMAN -S htop curl thunderbird vlc vlc-plugins-all udiskie jq xdg-utils
-$PACMAN -S grim slurp satty wl-clipboard wl-clip-persist
+$PACMAN -S grim slurp satty wl-clipboard wl-clip-persist wtype
 yay --needed --noconfirm -S brave-bin
 
 # audio
@@ -81,6 +81,8 @@ $PACMAN -S gammastep brightnessctl ddcutil
 echo "  WARNING: gammastep location hardcoded to Brno in hyprland.lua -- edit for your location."
 $PACMAN -S xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
 yay --needed --noconfirm -S tofi
+# voice dictation (PTT binds + wrapper scripts in dotfiles/bin and hyprland.lua)
+yay --needed --noconfirm -S handy-bin
 
 # apps
 $PACMAN -S imv gimp nm-connection-editor

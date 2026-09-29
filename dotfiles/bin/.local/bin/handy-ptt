@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# handy-ptt — push-to-talk wrapper for Handy with clipboard preservation.
+#
+# Usage:
+#   handy-ptt press    (key down: snapshot clipboard, start recording)
+#   handy-ptt release  (key up: stop recording; after Handy writes and pastes
+#                       the transcript, restore the snapshotted clipboard)
+#
+# Requires Handy settings: paste_method = ctrl_shift_v,
+#                          clipboard_handling = copy_to_clipboard.
+# NOTE: mutually exclusive with handy-route.sh (which needs paste_method =
+# external_script) — only one of the two can be active in Handy at a time.
+#
+# GUI apps: ctrl+shift+v collides with paste-special in some (VS Code markdown
+# preview, LibreOffice paste-special) — terminal workflow is the target.
+# If Handy crashes mid-recording while mute_while_recording is enabled,
+# system audio can stay muted — recover via wpctl/pavucontrol.
+#
+# The watcher gives the target app 1.5s after Handy's clipboard write before
+# restoring. If the recording is cancelled or produces no text, the clipboard
+# never changes: nothing is stashed or restored. handy-last re-copies the
+# last transcript after the restore.
+#
+# Desync self-heal: Handy exposes only toggles, so a rec-state file tracks
+# the expected recording state. A lost release (suspend while held, Hyprland
+# reload mid-press) leaves state=on with Handy recording — the next press
+# skips its toggle instead of stopping the recording (which would invert
+# PTT and leave the mic on after release).
+#
+# Limitation: text-only clipboard snapshot; image clipboard content is not
+# preserved across dictation.
+
+set -uo pipefail   # no -e: individual failures must not kill the flow
+
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/handy-ptt"
+mkdir -m 700 -p "$STATE_DIR"   # clipboard snapshots may hold secrets
+CLIP_SAVED="$STATE_DIR/clip-saved.txt"
+CLIP_NOW="$STATE_DIR/clip-now.txt"
+GEN_FILE="$STATE_DIR/gen"
+STATE_FILE="$STATE_DIR/rec-state"
+
+save_clipboard() {
+  wl-paste -n > "$CLIP_SAVED" 2>/dev/null || : > "$CLIP_SAVED"
+}
+
+restore_clipboard() {
+  if [ -s "$CLIP_SAVED" ]; then
+    wl-copy < "$CLIP_SAVED" 2>/dev/null || true
+  else
+    wl-copy --clear 2>/dev/null || true
+  fi
+}
+
+case "${1:-}" in
+  press)
+    # Bump generation: invalidates any restore-watcher still running from a
+    # previous dictation (rapid re-press), so it won't restore stale content.
+    GEN=$(( $(cat "$GEN_FILE" 2>/dev/null || echo 0) + 1 ))
+    echo "$GEN" > "$GEN_FILE"
+    save_clipboard
+    if [ "$(cat "$STATE_FILE" 2>/dev/null || echo off)" = "on" ]; then
+      # Recording already active (unreleased previous press): keep it going —
+      # toggling here would stop it and invert push-to-talk.
+      :
+    else
+      handy --toggle-transcription
+      echo on > "$STATE_FILE"
+    fi
+    ;;
+  release)
+    handy --toggle-transcription
+    echo off > "$STATE_FILE"
+    # No snapshot from a matching press (lost press / wiped state dir):
+    # nothing to detect, and restoring would clear the user's clipboard.
+    [ -f "$CLIP_SAVED" ] || exit 0
+    (
+      changed=0
+      GEN_AT_START="$(cat "$GEN_FILE" 2>/dev/null || echo 0)"
+      # Wait for Handy's clipboard write: clipboard differs from snapshot.
+      # Up to 60s (covers cold model load / post-processing latency).
+      for _ in $(seq 1 240); do
+        wl-paste -n > "$CLIP_NOW" 2>/dev/null || : > "$CLIP_NOW"
+        if ! cmp -s "$CLIP_SAVED" "$CLIP_NOW"; then changed=1; break; fi
+        sleep 0.25
+      done
+      if [ "$changed" = 1 ]; then
+        # Stash transcript for `handy-last` recovery (re-paste elsewhere).
+        cp -f "$CLIP_NOW" "$STATE_DIR/last-transcript.txt" 2>/dev/null || true
+        # Give the target app time to actually read the clipboard
+        # after Handy's ctrl+shift+v.
+        sleep 1.5
+        # A new dictation started meanwhile: its press took a fresh
+        # snapshot; do not clobber it with our restore.
+        GEN_NOW="$(cat "$GEN_FILE" 2>/dev/null || echo 0)"
+        if [ "$GEN_AT_START" = "$GEN_NOW" ]; then
+          restore_clipboard
+        fi
+      fi
+      # No change = cancelled/empty dictation: clipboard untouched, no
+      # restore, and (importantly) no stash of the pre-dictation clipboard
+      # into last-transcript.txt.
+    ) >/dev/null 2>&1 &
+    ;;
+  *)
+    printf 'usage: handy-ptt press|release\n' >&2
+    exit 1
+    ;;
+esac
