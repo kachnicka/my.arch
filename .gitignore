@@ -3,3 +3,4 @@ dotfiles/bin/.local/bin/*
 !dotfiles/bin/.local/bin/handy-ptt
 !dotfiles/bin/.local/bin/handy-route.sh
 !dotfiles/bin/.local/bin/handy-last
+.slim/
