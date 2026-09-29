@@ -38,6 +38,7 @@ $PACMAN -S man-db man-pages
 echo -e "\nEnable: paccache timer"
 $PACMAN -S pacman-contrib
 systemctl enable paccache.timer
+# timer args + cache cleanup live in maintenance.sh (single source of truth)
 
 echo -e "\nUpdate: pacman mirrorlist"
 $PACMAN -S rate-mirrors
@@ -321,6 +322,10 @@ $PACMAN -S hyprland uwsm xdg-user-dirs
 echo -e "\nAdd: Basic fonts"
 $PACMAN -S ttf-opensans 
 fc-cache
+
+echo -e "\nRun: cache maintenance"
+SCRIPT_PATH="$(dirname "$(realpath "$0")")"
+"$SCRIPT_PATH/maintenance.sh" "$USERNAME"
 
 echo -e "\nReboot system? (y/N)"
 read -r response
