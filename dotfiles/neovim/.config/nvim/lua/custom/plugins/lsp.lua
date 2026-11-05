@@ -2,7 +2,6 @@ return {
   'neovim/nvim-lspconfig',
   dependencies = {
     { 'williamboman/mason.nvim', config = true },
-    { 'williamboman/mason-lspconfig.nvim', opts = {} },
     { 'WhoIsSethDaniel/mason-tool-installer.nvim', opts = {} },
     { 'j-hui/fidget.nvim', opts = { progress = { display = { render_limit = 16 } } } },
     { 'folke/lazydev.nvim', opts = { library = { plugins = { 'nvim-lspconfig' } } } },

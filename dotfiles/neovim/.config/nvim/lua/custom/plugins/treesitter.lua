@@ -4,9 +4,8 @@ return {
   lazy = false,
   build = ':TSUpdate',
   config = function()
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     -- main branch: plugin = parser installer only. Highlight/indent = native Neovim API.
-    require('nvim-treesitter').setup {}
+    -- No setup() needed: defaults work as-is.
 
     -- Install parsers (no-op if already installed)
     require('nvim-treesitter').install {
@@ -38,9 +37,7 @@ return {
           return
         end
         pcall(vim.treesitter.start, args.buf, lang)
-        if vim.bo[args.buf].filetype ~= 'ruby' then
-          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-        end
+        vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end,
     })
   end,
