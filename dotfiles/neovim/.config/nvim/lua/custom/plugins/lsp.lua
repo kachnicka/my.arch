@@ -127,7 +127,10 @@ return {
     require('mason').setup()
 
     -- Ensure tools are installed
-    local ensure_installed = vim.tbl_keys(servers or {})
+    -- Map lspconfig server names to Mason package names (only lua_ls differs;
+    -- mason-lspconfig used to provide this translation before it was removed).
+    local mason_names = { lua_ls = 'lua-language-server' }
+    local ensure_installed = vim.tbl_map(function(name) return mason_names[name] or name end, vim.tbl_keys(servers or {}))
     vim.list_extend(ensure_installed, { 'stylua' })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
